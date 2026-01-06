@@ -1,26 +1,25 @@
 
-export interface TokenInfo {
+export interface Token {
+  id: string;
   address: string;
   name: string;
   symbol: string;
-  totalMinted: bigint;
-  progress: number;
-  isGraduated: boolean;
-  price: bigint;
-  virtualEth: bigint;
-  virtualTokens: bigint;
+  creator: string;
+  totalSupply: string;
+  price: string;
+  marketCap: string;
+  logoUrl?: string;
+  description?: string;
 }
 
-export enum AppView {
+export interface TradeRequest {
+  tokenAddress: string;
+  amount: string;
+  type: 'BUY' | 'SELL';
+}
+
+export enum AppSection {
   LIST = 'LIST',
   LAUNCH = 'LAUNCH',
-  DETAIL = 'DETAIL'
-}
-
-export interface Trade {
-  type: 'BUY' | 'SELL';
-  amount: string;
-  eth: string;
-  timestamp: number;
-  txHash: string;
+  TRADE = 'TRADE'
 }

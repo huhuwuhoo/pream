@@ -1,90 +1,67 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  createConfig, 
-  WagmiProvider, 
-  useAccount, 
-  useConnect, 
-  useDisconnect,
-  useReadContract,
-  useWriteContract,
-  useWaitForTransactionReceipt,
-  useBalance
-} from 'wagmi';
-import { mainnet } from 'wagmi/chains';
+import React, { useState } from 'react';
+import { WagmiProvider } from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { http } from 'viem';
-import { AppView, TokenInfo } from './types';
-import { CORE_CHAIN, CORE_PROTOCOL_ADDRESS, WALLET_CONNECT_PROJECT_ID } from './constants';
-import Header from './components/Header';
+import { wagmiAdapter } from './web3Config';
+import Navbar from './components/Navbar';
 import TokenList from './components/TokenList';
-import LaunchForm from './components/LaunchForm';
-import TokenDetail from './components/TokenDetail';
-
-// Configure Wagmi
-const config = createConfig({
-  chains: [CORE_CHAIN, mainnet],
-  transports: {
-    [CORE_CHAIN.id]: http(),
-    [mainnet.id]: http(),
-  },
-});
+import Launchpad from './components/Launchpad';
+import TradeInterface from './components/TradeInterface';
+import { AppSection, Token } from './types';
 
 const queryClient = new QueryClient();
 
-function AppContent() {
-  const { address, isConnected } = useAccount();
-  const [currentView, setCurrentView] = useState<AppView>(AppView.LIST);
-  const [selectedTokenAddress, setSelectedTokenAddress] = useState<string | null>(null);
+const App: React.FC = () => {
+  const [activeSection, setActiveSection] = useState<AppSection>(AppSection.LIST);
+  const [selectedToken, setSelectedToken] = useState<Token | null>(null);
 
-  const navigateToDetail = (tokenAddr: string) => {
-    setSelectedTokenAddress(tokenAddr);
-    setCurrentView(AppView.DETAIL);
-  };
-
-  const navigateHome = () => {
-    setSelectedTokenAddress(null);
-    setCurrentView(AppView.LIST);
+  const navigateToTrade = (token: Token) => {
+    setSelectedToken(token);
+    setActiveSection(AppSection.TRADE);
   };
 
   return (
-    <div className="min-h-screen bg-[#0c0c0e] text-gray-200">
-      <Header onHomeClick={navigateHome} onLaunchClick={() => setCurrentView(AppView.LAUNCH)} />
-      
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {currentView === AppView.LIST && (
-          <TokenList onTokenSelect={navigateToDetail} />
-        )}
-        
-        {currentView === AppView.LAUNCH && (
-          <LaunchForm onSuccess={navigateHome} />
-        )}
-        
-        {currentView === AppView.DETAIL && selectedTokenAddress && (
-          <TokenDetail tokenAddress={selectedTokenAddress} />
-        )}
-      </main>
-
-      <footer className="border-t border-gray-800 py-8 mt-12">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center opacity-50 text-sm">
-          <p>© 2024 FairPraem Protocol. No venture capital, no pre-sale, no team tokens.</p>
-          <div className="flex gap-6 mt-4 md:mt-0">
-            <a href="#" className="hover:text-white transition-colors">Twitter</a>
-            <a href="#" className="hover:text-white transition-colors">Telegram</a>
-            <a href="#" className="hover:text-white transition-colors">Docs</a>
-          </div>
-        </div>
-      </footer>
-    </div>
-  );
-}
-
-export default function App() {
-  return (
-    <WagmiProvider config={config}>
+    <WagmiProvider config={wagmiAdapter.wagmiConfig}>
       <QueryClientProvider client={queryClient}>
-        <AppContent />
+        <div className="min-h-screen bg-black text-white selection:bg-blue-500 selection:text-white">
+          <Navbar 
+            activeSection={activeSection} 
+            onNavigate={(section) => setActiveSection(section)} 
+          />
+          
+          <main className="max-w-7xl mx-auto px-4 py-8">
+            {activeSection === AppSection.LIST && (
+              <TokenList onTrade={navigateToTrade} />
+            )}
+            
+            {activeSection === AppSection.LAUNCH && (
+              <Launchpad onLaunched={() => setActiveSection(AppSection.LIST)} />
+            )}
+            
+            {activeSection === AppSection.TRADE && selectedToken && (
+              <TradeInterface token={selectedToken} />
+            )}
+
+            {activeSection === AppSection.TRADE && !selectedToken && (
+              <div className="text-center py-20">
+                <h2 className="text-2xl font-bold mb-4">No token selected</h2>
+                <button 
+                  onClick={() => setActiveSection(AppSection.LIST)}
+                  className="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-full font-bold transition-all"
+                >
+                  Browse Tokens
+                </button>
+              </div>
+            )}
+          </main>
+
+          <footer className="border-t border-white/10 py-12 text-center text-white/40 text-sm">
+            <p>© 2024 BaseLaunch Protocol. Deploy responsibly on Base Sepolia.</p>
+          </footer>
+        </div>
       </QueryClientProvider>
     </WagmiProvider>
   );
-}
+};
+
+export default App;
