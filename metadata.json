@@ -1,0 +1,8 @@
+
+{
+  "name": "FairPraem - Core Bonding Curve",
+  "description": "A Pump.fun style bonding curve platform deployed on Core blockchain. Launch and trade tokens with fair distribution mechanics.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
